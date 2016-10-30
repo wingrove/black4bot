@@ -1,0 +1,67 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">  
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script>
+
+	function clickDownload(aLink)  
+	{   
+		 alert(exportString);
+		 exportString = encodeURIComponent(exportString);  
+		 aLink.href = "data:text/csv;charset=utf-8,"+exportString;  
+	}  
+	
+	//var exportString="Id,Lon,Lat";
+	var myToken="pk2rx-gVUcNnQiqjgpTvygj2zjZPf8VIrxUmKyIqVHmv3STkeEfie_xBHB-4yKfqN0Y0oXnrYHLWCc5mKMouHdquw95WOK7aOxXfm6krWLtbV4lclFrTiGDXA4JMSHt1l74YB67Lh7xBxo0ZM5D0Kg..";
+	var openFile = function(event) 
+	{
+		var input = event.target;
+		var reader = new FileReader();
+		var x,y;
+		reader.onload = function()
+		{
+			var addressString=reader.result;
+			var address="";
+			var geoCoding="";
+			var index;
+			var i=0;
+			while (addressString!="")
+			{		
+				index=addressString.indexOf("\n");
+				address=addressString.substring(0,index);		
+				addressString=addressString.substring(index+1,addressString.length);
+				
+				geoCoding='http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/geocodeAddresses?addresses={"records":[{"attributes":{"OBJECTID":1,"SingleLine":"'
+				+address+'",}}]}&token='+myToken+'&category=&f=pjson';				
+				
+				var getCoordinate = null;
+				$.ajax({
+					type: "GET",
+					url: geoCoding,
+					async: false,
+					success: function(data) 
+					{
+						getCoordinate = data;
+						x=JSON.stringify(JSON.parse(getCoordinate).locations[0].location.x);	
+						y=JSON.stringify(JSON.parse(getCoordinate).locations[0].location.y);
+						exportString=i.toString()+","+x.toString()+","+y.toString();
+						console.log(exportString);
+					}
+				});
+
+				i++;
+				if (i%950==0)
+				alert("Please save the console!");
+			}	
+			alert("Finish!");
+		};
+		reader.readAsText(input.files[0]);
+	};
+</script>
+</head>
+<body>
+	<input type='file' accept='text/plain' onchange='openFile(event)'><br>
+	<div id='output'></div>
+	
+</body>
+</html>
